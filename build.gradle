@@ -1,0 +1,38 @@
+plugins {
+    id 'com.bmuschko.docker-remote-api' version '4.8.0'
+}
+
+ext.imageName = "ds-dtr.eis.wwu.edu/eas/foo"
+ext.imageVersion = "1.2"
+
+import com.bmuschko.gradle.docker.tasks.image.*
+
+task dockerCreateDockerfile(type: Dockerfile) {
+    from "tomcat:8-alpine"
+}
+
+task dockerBuildImage(type: DockerBuildImage) {
+    dependsOn dockerCreateDockerfile
+    tags.add("${imageName}:${imageVersion}")
+    docker {
+        registryCredentials {
+            url = publicDockerRegistryUrl
+            username = publicDockerRegistryUsername
+            password = publicDockerRegistryPassword
+            email = publicDockerRegistryEmail
+        }
+    }
+}
+
+task dockerPushImage(type: DockerPushImage) {
+    dependsOn dockerBuildImage
+    imageName = project.imageName
+    tag = project.imageVersion
+    docker {
+        registryCredentials {
+            username = easDockerRegistryUsername
+            password = easDockerRegistryPassword
+            email = easDockerRegistryEmail
+        }
+    }
+}
